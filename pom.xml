@@ -266,17 +266,16 @@
               <exclude>**/patchprocess/**</exclude>
               <exclude>**/dependency-reduced-pom.xml</exclude>
               <exclude>**/rat.txt</exclude>
-              <!-- exclude the shaded protobuf files -->
+              <!-- Exclude the patch files -->
               <exclude>**/src/main/patches/**</exclude>
-              <!--Exclude the unpacked google src-->
+              <!-- Exclude the unpacked google src -->
               <exclude>**/src/main/java/com/google/protobuf/**</exclude>
               <exclude>**/src/main/patches/**</exclude>
               <exclude>**/src/main/resources/google/**</exclude>
               <exclude>**/src/main/java/META-INF/**</exclude>
-              <!--Exclude the unpacked libthrift src and bundled license/notice-->
-              <exclude>**/hbase-shaded-thrift/src/main/java/org/apache/thrift/**</exclude>
-              <exclude>**/hbase-shaded-thrift/src/main/resources/META-INF/LICENSE.txt</exclude>
-              <exclude>**/hbase-shaded-thrift/src/main/resources/META-INF/NOTICE.txt</exclude>
+              <!-- Exclude the unpacked libthrift src -->
+              <exclude>**/src/main/java/org/apache/thrift/**</exclude>
+              <exclude>**/src/main/resources/META-INF/**</exclude>
             </excludes>
           </configuration>
         </plugin>
