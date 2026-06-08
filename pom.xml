@@ -95,6 +95,7 @@
   </mailingLists>
   <modules>
     <module>hbase-shaded-protobuf</module>
+    <module>hbase-shaded-thrift</module>
     <module>hbase-shaded-netty</module>
     <module>hbase-shaded-netty-tcnative</module>
     <module>hbase-shaded-gson</module>
@@ -144,6 +145,10 @@
     <os.maven.version>1.7.1</os.maven.version>
     <rename.offset>org.apache.hbase.thirdparty</rename.offset>
     <protobuf.version>4.34.0</protobuf.version>
+    <!-- libthrift sources jar pulled, patched, and shaded by hbase-shaded-thrift. The patches
+    under hbase-shaded-thrift/src/main/patches were authored against this exact version and will
+    not apply cleanly against any other. -->
+    <thrift.version>0.23.0</thrift.version>
     <netty.version>4.1.137.Final</netty.version>
     <netty.tcnative.version>2.0.75.Final</netty.tcnative.version>
     <guava.version>33.5.0-jre</guava.version>
@@ -162,6 +167,15 @@
     <javassist.version>3.30.2-GA</javassist.version>
     <jackson-jaxrs-json-provider.version>2.21.1</jackson-jaxrs-json-provider.version>
     <spotless.version>2.30.0</spotless.version>
+    <!--
+      Compile-time deps used by the patched libthrift sources in hbase-shaded-thrift. The
+      shaded thrift jar does NOT bundle these. We set them at 'provided' scope at compile
+      time and downstream consumers supply them.
+    -->
+    <slf4j.version>1.7.36</slf4j.version>
+    <httpclient.version>4.5.13</httpclient.version>
+    <httpcore.version>4.4.13</httpcore.version>
+    <commons-lang3.version>3.12.0</commons-lang3.version>
 
     <!-- Below is copied from hbase project -->
     <hbase-surefire.jdk17.flags>-Dorg.apache.hbase.thirdparty.io.netty.tryReflectionSetAccessible=true
@@ -256,8 +270,13 @@
               <exclude>**/src/main/patches/**</exclude>
               <!--Exclude the unpacked google src-->
               <exclude>**/src/main/java/com/google/protobuf/**</exclude>
+              <exclude>**/src/main/patches/**</exclude>
               <exclude>**/src/main/resources/google/**</exclude>
               <exclude>**/src/main/java/META-INF/**</exclude>
+              <!--Exclude the unpacked libthrift src and bundled license/notice-->
+              <exclude>**/hbase-shaded-thrift/src/main/java/org/apache/thrift/**</exclude>
+              <exclude>**/hbase-shaded-thrift/src/main/resources/META-INF/LICENSE.txt</exclude>
+              <exclude>**/hbase-shaded-thrift/src/main/resources/META-INF/NOTICE.txt</exclude>
             </excludes>
           </configuration>
         </plugin>
