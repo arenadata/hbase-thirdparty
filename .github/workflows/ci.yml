@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: ['develop/**', 'release/**']
+  pull_request:
+    branches: ['develop/**', 'release/**']
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  MAVEN_ARGS: -B -V -e -ntp
+
+jobs:
+  build:
+    name: Build & Test (JDK 17)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-java@v4
+      with:
+        java-version: 8
+        distribution: temurin
+    - uses: actions/setup-java@v4
+      with:
+        java-version: 17
+        distribution: temurin
+        cache: maven
+        server-id: arenadata
+        server-username: GITHUB_ACTOR
+        server-password: GITHUB_TOKEN
+    - name: Prepare build
+      run: |
+        JAVA8_HOME=$JAVA_HOME_8_X64 JAVA17_HOME=$JAVA_HOME_17_X64 ./dev-support/generate-toolchains.sh
+        cp toolchains.xml ~/.m2/toolchains.xml
+    - name: Build & Test
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: >-
+        mvn ${{ env.MAVEN_ARGS }} verify
+        -Dsurefire.rerunFailingTestsCount=2
+        -fae
+    - name: Upload surefire reports
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: surefire-reports
+        path: '**/target/surefire-reports/'
+        if-no-files-found: ignore

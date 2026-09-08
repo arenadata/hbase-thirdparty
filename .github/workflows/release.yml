@@ -1,0 +1,90 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+  packages: write
+
+env:
+  MAVEN_ARGS: -B -V -e -ntp
+
+jobs:
+  release:
+    name: Build and Release
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - name: Verify tag is on a develop branch
+      run: |
+        BRANCHES=$(git branch -r --contains ${{ github.sha }} | grep 'origin/develop/' || true)
+        if [ -z "$BRANCHES" ]; then
+          echo "Tag must be on a develop/** branch. Found on:"
+          git branch -r --contains ${{ github.sha }}
+          exit 1
+        fi
+        echo "Tag is on: $BRANCHES"
+    - name: Verify CI passed
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        CONCLUSION=$(gh run list --commit ${{ github.sha }} --workflow CI --json conclusion -q '.[0].conclusion')
+        if [ -z "$CONCLUSION" ]; then
+          echo "No CI run found for this commit. Push to a develop/** branch first."
+          exit 1
+        fi
+        if [ "$CONCLUSION" != "success" ]; then
+          echo "CI has not passed for this commit (status: $CONCLUSION)"
+          exit 1
+        fi
+        echo "CI passed"
+    - uses: actions/setup-java@v4
+      with:
+        java-version: 8
+        distribution: temurin
+    - uses: actions/setup-java@v4
+      with:
+        java-version: 17
+        distribution: temurin
+        cache: maven
+        server-id: arenadata
+        server-username: GITHUB_ACTOR
+        server-password: GITHUB_TOKEN
+    - name: Prepare build
+      run: |
+        JAVA8_HOME=$JAVA_HOME_8_X64 JAVA17_HOME=$JAVA_HOME_17_X64 ./dev-support/generate-toolchains.sh
+        cp toolchains.xml ~/.m2/toolchains.xml
+    - name: Configure Maven servers for GitHub Packages
+      run: |
+        cat > ~/.m2/settings.xml <<'EOF'
+        <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0">
+          <servers>
+            <server><id>arenadata</id><username>${env.GITHUB_ACTOR}</username><password>${env.GITHUB_TOKEN}</password></server>
+            <server><id>github</id><username>${env.GITHUB_ACTOR}</username><password>${env.GITHUB_TOKEN}</password></server>
+          </servers>
+        </settings>
+        EOF
+    - name: Verify tag matches pom version
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        TAG=${GITHUB_REF_NAME#v}
+        VERSION=$(mvn ${{ env.MAVEN_ARGS }} -q help:evaluate -Dexpression=project.version -DforceStdout)
+        if [ "$TAG" != "$VERSION" ]; then
+          echo "Tag $TAG does not match pom.xml version $VERSION"
+          exit 1
+        fi
+    - name: Build and deploy to GitHub Packages
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: mvn ${{ env.MAVEN_ARGS }} deploy -DskipTests
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v2
+      with:
+        generate_release_notes: true
+        prerelease: ${{ contains(github.ref_name, '-rc') }}
