@@ -74,7 +74,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         TAG=${GITHUB_REF_NAME#v}
-        VERSION=$(mvn ${{ env.MAVEN_ARGS }} -q help:evaluate -Dexpression=project.version -DforceStdout)
+        VERSION=$(mvn -B -ntp -q help:evaluate -Dexpression=project.version -DforceStdout)
         if [ "$TAG" != "$VERSION" ]; then
           echo "Tag $TAG does not match pom.xml version $VERSION"
           exit 1
