@@ -72,6 +72,8 @@ jobs:
     - name: Verify tag matches pom version
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # Maven 3.9+ applies MAVEN_ARGS from the environment; -V would print its banner into VERSION
+        MAVEN_ARGS: -B -ntp
       run: |
         TAG=${GITHUB_REF_NAME#v}
         VERSION=$(mvn -B -ntp -q help:evaluate -Dexpression=project.version -DforceStdout)
