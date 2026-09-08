@@ -85,8 +85,25 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: mvn ${{ env.MAVEN_ARGS }} deploy -DskipTests
+    - name: Generate SBOM
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: >-
+        mvn ${{ env.MAVEN_ARGS }} org.cyclonedx:cyclonedx-maven-plugin:2.9.1:makeAggregateBom
+        -DoutputFormat=json -DoutputName=bom
+        -DoutputDirectory=${{ github.workspace }}/target
+    - name: Vulnerability scan (grype)
+      uses: anchore/scan-action@v6
+      with:
+        sbom: target/bom.json
+        fail-build: false
+        output-format: json
+        output-file: vulnerability-report.json
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v2
       with:
         generate_release_notes: true
         prerelease: ${{ contains(github.ref_name, '-rc') }}
+        files: |
+          target/bom.json
+          vulnerability-report.json
