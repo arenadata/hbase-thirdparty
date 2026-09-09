@@ -18,6 +18,17 @@
 -->
 # HBASE Changelog
 
+## Release thirdparty-4.1.14 - Unreleased (as of 2026-06-08)
+
+
+
+### IMPROVEMENTS:
+
+| JIRA | Summary | Priority | Component |
+|:---- |:---- | :--- |:---- |
+| [HBASE-30194](https://issues.apache.org/jira/browse/HBASE-30194) | [thirdparty] Onboard libthrift to hbase-thirdparty |  Major | . |
+
+
 ## Release thirdparty-4.1.13 - Unreleased (as of 2026-03-07)
 
 

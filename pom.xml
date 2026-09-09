@@ -126,7 +126,7 @@
     </repository>
   </distributionManagement>
   <properties>
-    <revision>4.1.13.1-4.4.0-0</revision>
+    <revision>4.1.14.1-4.4.0-0</revision>
     <maven.javadoc.skip>true</maven.javadoc.skip>
     <maven.build.timestamp.format>yyyy-MM-dd'T'HH:mm</maven.build.timestamp.format>
     <buildDate>${maven.build.timestamp}</buildDate>
